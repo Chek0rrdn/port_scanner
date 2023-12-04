@@ -31,27 +31,33 @@ def port_scanner(port: int, host, s: socket.socket):
         s.connect((host, port))
         print(colored(f"\n[+] El puerto {port} esta abierto", 'green'))
     except (socket.timeout, ConnectionRefusedError):
-        pass
+        s.close()
     finally:
         s.close()
 
 
-def main():
+def scan_ports(ports, target):
+    for por in ports:
+        s = create_socket()
+        port_scanner(por, target, s)
 
-    target, port = get_arguments()
 
-    if '-' in port:
-        ports = port.split('-')
-
-        for port in range(int(ports[0]), int(ports[1])):
-            s = create_socket()
-            port_scanner(port, target, s)
+def parse_ports(ports_str):
+    if '-' in ports_str:
+        start, end = map(int, ports_str.split('-'))
+        return range(start, end+1)
+    
     elif ',':
-        ports = port.split(',')
+        return map(int, ports_str.split(','))
+    
+    else:
+        return (int(ports_str),)
 
-        for port in ports:
-            s = create_socket()
-            port_scanner(int(port), target, s)
+
+def main():
+    target, ports_str = get_arguments()
+    ports = parse_ports(ports_str)
+    scan_ports(ports, target)
 
 
 
