@@ -2,9 +2,26 @@
 
 import argparse
 import socket
+import signal
+import sys
 
 from concurrent.futures import ThreadPoolExecutor
 from termcolor import colored
+
+
+
+open_socket = []
+
+def def_handler(sig, frame):
+    print(colored("\n[!] Saliendo del programa", 'red'))
+    
+    for socket in open_socket:
+        socket.close()
+    
+    sys.exit(1)
+
+
+signal.signal(signal.SIGINT, def_handler) # Ctrl+C
 
 
 def get_arguments():
@@ -19,6 +36,9 @@ def get_arguments():
 def create_socket():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1)
+
+    open_socket.append(s)
+
     return s
 
 
@@ -29,7 +49,7 @@ def port_scanner(port: int, host):
         s.connect((host, port))
         print(colored(f"\n[+] El puerto {port} esta abierto", 'green'))
     except (socket.timeout, ConnectionRefusedError):
-        s.close()
+        pass
     finally:
         s.close()
 
