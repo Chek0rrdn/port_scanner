@@ -46,6 +46,12 @@ def main():
         for port in range(int(ports[0]), int(ports[1])):
             s = create_socket()
             port_scanner(port, target, s)
+    elif ',':
+        ports = port.split(',')
+
+        for port in ports:
+            s = create_socket()
+            port_scanner(int(port), target, s)
 
 
 
