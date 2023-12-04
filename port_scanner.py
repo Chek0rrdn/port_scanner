@@ -2,8 +2,8 @@
 
 import argparse
 import socket
-import threading
 
+from concurrent.futures import ThreadPoolExecutor
 from termcolor import colored
 
 
@@ -35,15 +35,8 @@ def port_scanner(port: int, host):
 
 
 def scan_ports(ports, target):
-    threads = list()
-
-    for port in ports:
-        thread = threading.Thread(target=port_scanner, args=(port, target))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
+    with ThreadPoolExecutor(max_workers=200) as executor:
+        executor.map(lambda port: port_scanner(port, target), ports)
 
 
 def parse_ports(ports_str):
