@@ -2,20 +2,16 @@
 
 import argparse
 import socket
-import sys
+import threading
 
 from termcolor import colored
 
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Escáner de Puertos')
-    parser.add_argument("-t", "--target", dest="target", help="Host a escanear (Ex. 192.168.1.1)")
-    parser.add_argument("-p", "--port", dest="port", help="Rango de puertos a escanear (EX. -p 1-2000)")
+    parser.add_argument("-t", "--target", dest="target", required=True, help="Host a escanear (Ex. 192.168.1.1)")
+    parser.add_argument("-p", "--port", dest="port", required=True, help="Rango de puertos a escanear (EX. -p 1-2000)")
     options = parser.parse_args()
-
-    if options.target is None or options.port is None:
-        parser.print_help()
-        sys.exit(1)
 
     return options.target, options.port
 
@@ -26,7 +22,9 @@ def create_socket():
     return s
 
 
-def port_scanner(port: int, host, s: socket.socket):
+def port_scanner(port: int, host):
+    s = create_socket()
+
     try:
         s.connect((host, port))
         print(colored(f"\n[+] El puerto {port} esta abierto", 'green'))
@@ -37,9 +35,15 @@ def port_scanner(port: int, host, s: socket.socket):
 
 
 def scan_ports(ports, target):
-    for por in ports:
-        s = create_socket()
-        port_scanner(por, target, s)
+    threads = list()
+
+    for port in ports:
+        thread = threading.Thread(target=port_scanner, args=(port, target))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
 
 def parse_ports(ports_str):
